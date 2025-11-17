@@ -1,0 +1,15 @@
+services:
+    realtime-hakka-asr:
+        build: .
+        image: realtime-hakka-asr
+        container_name: realtime-hakka-asr
+        restart: always
+        ports:
+            - 2515:7860
+        deploy:
+            resources:
+                reservations:
+                    devices:
+                        - driver: nvidia
+                          count: all
+                          capabilities: [gpu]

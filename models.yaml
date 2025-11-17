@@ -1,0 +1,9 @@
+whisper-large-v3:
+  model: ${load_pipe:formospeech/whisper-large-v3-taiwanese-hakka}
+  dialect_mapping:
+    四縣: htia_sixian
+    海陸: htia_hailu
+    大埔: htia_dapu
+    饒平: htia_raoping
+    詔安: htia_zhaoan
+    南四縣: htia_nansixian

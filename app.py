@@ -11,6 +11,7 @@ from pydub import AudioSegment
 
 from google import genai
 import logging
+import requests
 
 logging.basicConfig(
     level=logging.INFO,
@@ -106,7 +107,18 @@ def stream_transcribe(stream, new_chunk, dialect_id, api_key, volume_threshold):
                         )
                         stream["text_buffer"].append(response.text)
                     else:
-                        stream["text_buffer"].append("API Key 未提供")
+                        zh_text = requests.post(
+                            "https://api.gohakka.org/v2/render/txt/sixian-to-zh",
+                            headers={
+                                "Content-Type": "application/json",
+                                "Authorization": "Bearer go_4h1254wRzXZ3HHJGGtOChmXHvFFvgu"
+                            },
+                            json={
+                                "text": transcription
+                            }
+                        ).json().get("chinese")
+                        stream["text_buffer"].append(zh_text)
+                        # stream["text_buffer"].append("API Key 未提供")
                 except Exception as e:
                     stream["text_buffer"].append(f"{e}")
                 text = "\n".join(stream["text_buffer"][-6:])

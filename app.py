@@ -126,6 +126,8 @@ def stream_transcribe(stream, new_chunk, dialect_id, api_key, volume_threshold):
                 if should_asr:
                     stream["last_text"] = transcription
                     text += "<p style='font-size:xxx-large;'>"+transcription+"</p>"
+                else:
+                    text += "<p style='font-size:xxx-large;'>&emsp;</p>"
 
         return stream, text, f"{latency:.2f}", f"{volume:.2f}"
     except Exception as e:
@@ -175,7 +177,7 @@ with gr.Blocks() as microphone:
         # clear_button.click(clear_state, outputs=[state]).then(clear, outputs=[output])
 
 
-with gr.Blocks(theme=gr.themes.Default()) as demo:
+with gr.Blocks(theme=gr.themes.Soft()) as demo:
     gr.TabbedInterface([microphone], ["Microphone"])
 
 demo.launch()

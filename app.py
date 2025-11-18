@@ -98,14 +98,14 @@ def stream_transcribe(stream, new_chunk, dialect_id, api_key, volume_threshold):
         if transcription:
             if stream["last_text"] == transcription:
                 stream["audio_buffer"] = None
-                stream["text_buffer"].append(transcription)
+                stream["text_buffer"].append("<p style='font-size:xxx-large;'>"+transcription+"</p>")
                 try:
                     if (api_key):
                         client = genai.Client(api_key=api_key)
                         response = client.models.generate_content(
                             model="gemini-2.5-flash", contents=f"只回答答案，不要復述題目，將客語「{transcription}」 翻譯成繁體中文"
                         )
-                        stream["text_buffer"].append(response.text)
+                        stream["text_buffer"].append("<p style='color:blue; font-size:xxx-large; font-weight:bold;'>"+response.text+"</p>")
                     else:
                         zh_text = requests.post(
                             "https://api.gohakka.org/v2/render/txt/sixian-to-zh",
@@ -117,7 +117,7 @@ def stream_transcribe(stream, new_chunk, dialect_id, api_key, volume_threshold):
                                 "text": transcription
                             }
                         ).json().get("chinese")
-                        stream["text_buffer"].append(zh_text)
+                        stream["text_buffer"].append("<p style='font-size:xxx-large; font-weight:bold;'>"+zh_text+"</p>")
                         # stream["text_buffer"].append("API Key 未提供")
                 except Exception as e:
                     stream["text_buffer"].append(f"{e}")
@@ -145,6 +145,9 @@ with gr.Blocks() as microphone:
     with gr.Column():
         gr.Markdown(
             f"# Realtime Hakka ASR: \nNote: The first token takes about 5 seconds. After that, it works flawlessly.")
+        # http://z.ouob.net:2515
+# 非https需要開啟麥克風權限（如圖）
+# chrome://flags/#unsafely-treat-insecure-origin-as-secure
         with gr.Row():
             input_audio_microphone = gr.Audio(streaming=True)
             with gr.Column():
@@ -167,12 +170,12 @@ with gr.Blocks() as microphone:
         #     with gr.Column(scale=0):
         #         latency_textbox = gr.Textbox(label="Latency (seconds)", value="0.0", scale=0)
         #         volume = gr.Textbox(label="Volume", value="0.0", scale=0)
-        with gr.Row():
-            clear_button = gr.Button("Clear Output")
+        # with gr.Row():
+            # clear_button = gr.Button("Clear Output")
         state = gr.State(clear_state())
         input_audio_microphone.stream(stream_transcribe, [state, input_audio_microphone, dialect_drop_down, api_key, volume_threshold], [
                                       state, output, latency_textbox, volume], time_limit=30, stream_every=1, concurrency_limit=None)
-        clear_button.click(clear_state, outputs=[state]).then(clear, outputs=[output])
+        # clear_button.click(clear_state, outputs=[state]).then(clear, outputs=[output])
 
 
 with gr.Blocks(theme=gr.themes.Ocean()) as demo:

@@ -158,11 +158,15 @@ with gr.Blocks() as microphone:
                 )
                 api_key = gr.Textbox(label="Gemini API Key", type="password")
             volume_threshold = gr.Textbox(label="Volume Threshold", value="10")
-        with gr.Row():
-            output = gr.Textbox(label="Transcription", value="")
             with gr.Column(scale=0):
                 latency_textbox = gr.Textbox(label="Latency (seconds)", value="0.0", scale=0)
                 volume = gr.Textbox(label="Volume", value="0.0", scale=0)
+        with gr.Row():
+            # output = gr.Textbox(label="Transcription", value="")
+            output = gr.HTML()
+        #     with gr.Column(scale=0):
+        #         latency_textbox = gr.Textbox(label="Latency (seconds)", value="0.0", scale=0)
+        #         volume = gr.Textbox(label="Volume", value="0.0", scale=0)
         with gr.Row():
             clear_button = gr.Button("Clear Output")
         state = gr.State(clear_state())

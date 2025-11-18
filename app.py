@@ -175,7 +175,7 @@ with gr.Blocks() as microphone:
         # clear_button.click(clear_state, outputs=[state]).then(clear, outputs=[output])
 
 
-with gr.Blocks(theme=gr.themes.Soft(mode="light")) as demo:
+with gr.Blocks(theme=gr.themes.Default()) as demo:
     gr.TabbedInterface([microphone], ["Microphone"])
 
 demo.launch()

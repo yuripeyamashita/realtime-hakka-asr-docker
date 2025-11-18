@@ -125,7 +125,7 @@ def stream_transcribe(stream, new_chunk, dialect_id, api_key, volume_threshold):
             else:
                 if should_asr:
                     stream["last_text"] = transcription
-                    text += f"\n\n{transcription}"
+                    text += "<p style='font-size:xxx-large;'>"+transcription+"</p>"
 
         return stream, text, f"{latency:.2f}", f"{volume:.2f}"
     except Exception as e:
@@ -144,10 +144,7 @@ def clear_state():
 with gr.Blocks() as microphone:
     with gr.Column():
         gr.Markdown(
-            f"# Realtime Hakka ASR: \nNote: The first token takes about 5 seconds. After that, it works flawlessly.")
-        # http://z.ouob.net:2515
-# 非https需要開啟麥克風權限（如圖）
-# chrome://flags/#unsafely-treat-insecure-origin-as-secure
+            f"# Realtime Hakka ASR: \nNote: add 'http://z.ouob.net:2515' to 'chrome://flags/#unsafely-treat-insecure-origin-as-secure' access the microphone.")
         with gr.Row():
             input_audio_microphone = gr.Audio(streaming=True)
             with gr.Column():
@@ -178,7 +175,7 @@ with gr.Blocks() as microphone:
         # clear_button.click(clear_state, outputs=[state]).then(clear, outputs=[output])
 
 
-with gr.Blocks(theme=gr.themes.Ocean()) as demo:
+with gr.Blocks(theme=gr.themes.Soft(mode="light")) as demo:
     gr.TabbedInterface([microphone], ["Microphone"])
 
 demo.launch()

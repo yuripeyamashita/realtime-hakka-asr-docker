@@ -106,7 +106,7 @@ def stream_transcribe(stream, new_chunk, dialect_id, api_key, volume_threshold, 
             text = "\n".join(stream["text_buffer"][-6:])
 
         if transcription:
-            if stream["last_text"] == transcription:
+            if len(transcription) >= 25 or stream["last_text"] == transcription:
                 stream["audio_buffer"] = None
                 stream["text_buffer"].append("<p style='font-size:xxx-large;'>"+transcription+"</p>")
                 try:
@@ -198,7 +198,7 @@ with gr.Blocks() as microphone:
             # clear_button = gr.Button("Clear Output")
         state = gr.State(clear_state())
         input_audio_microphone.stream(stream_transcribe, [state, input_audio_microphone, dialect_drop_down, api_key, volume_threshold, is_zh], [
-                                      state, output, latency_textbox, volume], time_limit=15, stream_every=1, concurrency_limit=None)
+                                      state, output, latency_textbox, volume], time_limit=30, stream_every=1, concurrency_limit=None)
         # clear_button.click(clear_state, outputs=[state]).then(clear, outputs=[output])
 
 

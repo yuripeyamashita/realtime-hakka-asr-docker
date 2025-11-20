@@ -45,9 +45,16 @@ OmegaConf.register_new_resolver("load_pipe", load_pipe)
 models_config = OmegaConf.to_object(OmegaConf.load("models.yaml"))
 model = models_config[default_model_id]["model"]
 
+orig_whisper_pipe = pipeline(
+    task="automatic-speech-recognition",
+    model="openai/whisper-small",
+    chunk_length_s=30,
+    device=device,
+)
+
 
 @spaces.GPU
-def stream_transcribe(stream, new_chunk, dialect_id, api_key, volume_threshold):
+def stream_transcribe(stream, new_chunk, dialect_id, api_key, volume_threshold, is_zh):
     start_time = time.time()
     try:
         sr, y = new_chunk
@@ -85,7 +92,10 @@ def stream_transcribe(stream, new_chunk, dialect_id, api_key, volume_threshold):
         audio_file = temp_wav_file.name
 
         # transcription = pipe({"sampling_rate": sr, "raw": stream})["text"]
-        res = model(audio_file, generate_kwargs=generate_kwargs, return_timestamps=True)
+        if is_zh:
+            res = orig_whisper_pipe(audio_file, batch_size=8, generate_kwargs={"task": "transcribe", "language": "chinese"}, return_timestamps=False)
+        else:
+            res = model(audio_file, generate_kwargs=generate_kwargs, return_timestamps=False)
         # logger.warning(res)
         transcription = res["text"]
         end_time = time.time()
@@ -107,17 +117,30 @@ def stream_transcribe(stream, new_chunk, dialect_id, api_key, volume_threshold):
                         )
                         stream["text_buffer"].append("<p style='color:blue; font-size:xxx-large; font-weight:bold;'>"+response.text+"</p>")
                     else:
-                        zh_text = requests.post(
-                            "https://api.gohakka.org/v2/render/txt/sixian-to-zh",
-                            headers={
-                                "Content-Type": "application/json",
-                                "Authorization": "Bearer go_4h1254wRzXZ3HHJGGtOChmXHvFFvgu"
-                            },
-                            json={
-                                "text": transcription
-                            }
-                        ).json().get("chinese")
-                        stream["text_buffer"].append("<p style='font-size:xxx-large; font-weight:bold;'>"+zh_text+"</p>")
+                        if is_zh:
+                            ha_text = requests.post(
+                                "https://api.gohakka.org/v2/render/txt/zh-to-sixian",
+                                headers={
+                                    "Content-Type": "application/json",
+                                    "Authorization": "Bearer go_4h1254wRzXZ3HHJGGtOChmXHvFFvgu"
+                                },
+                                json={
+                                    "text": transcription
+                                }
+                            ).json().get("hakka")
+                            stream["text_buffer"].append("<p style='font-size:xxx-large; font-weight:bold;'>"+ha_text+"</p>")
+                        else:
+                            zh_text = requests.post(
+                                "https://api.gohakka.org/v2/render/txt/sixian-to-zh",
+                                headers={
+                                    "Content-Type": "application/json",
+                                    "Authorization": "Bearer go_4h1254wRzXZ3HHJGGtOChmXHvFFvgu"
+                                },
+                                json={
+                                    "text": transcription
+                                }
+                            ).json().get("chinese")
+                            stream["text_buffer"].append("<p style='font-size:xxx-large; font-weight:bold;'>"+zh_text+"</p>")
                         # stream["text_buffer"].append("API Key 未提供")
                 except Exception as e:
                     stream["text_buffer"].append(f"{e}")
@@ -159,7 +182,9 @@ with gr.Blocks() as microphone:
                     label="腔調",
                 )
                 api_key = gr.Textbox(label="Gemini API Key", type="password")
-            volume_threshold = gr.Textbox(label="Volume Threshold", value="10")
+            with gr.Column(scale=0):
+                is_zh = gr.Checkbox(label="啟用華文輸入", value=False)
+                volume_threshold = gr.Textbox(label="Volume Threshold", value="10")
             with gr.Column(scale=0):
                 latency_textbox = gr.Textbox(label="Latency (seconds)", value="0.0", scale=0)
                 volume = gr.Textbox(label="Volume", value="0.0", scale=0)
@@ -172,8 +197,8 @@ with gr.Blocks() as microphone:
         # with gr.Row():
             # clear_button = gr.Button("Clear Output")
         state = gr.State(clear_state())
-        input_audio_microphone.stream(stream_transcribe, [state, input_audio_microphone, dialect_drop_down, api_key, volume_threshold], [
-                                      state, output, latency_textbox, volume], time_limit=30, stream_every=1, concurrency_limit=None)
+        input_audio_microphone.stream(stream_transcribe, [state, input_audio_microphone, dialect_drop_down, api_key, volume_threshold, is_zh], [
+                                      state, output, latency_textbox, volume], time_limit=15, stream_every=1, concurrency_limit=None)
         # clear_button.click(clear_state, outputs=[state]).then(clear, outputs=[output])
 
 

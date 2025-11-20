@@ -47,7 +47,7 @@ model = models_config[default_model_id]["model"]
 
 orig_whisper_pipe = pipeline(
     task="automatic-speech-recognition",
-    model="openai/whisper-small",
+    model="openai/whisper-base",
     chunk_length_s=30,
     device=device,
 )

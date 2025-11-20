@@ -106,7 +106,7 @@ def stream_transcribe(stream, new_chunk, dialect_id, api_key, volume_threshold, 
             text = "\n".join(stream["text_buffer"][-6:])
 
         if transcription:
-            if len(transcription) >= 25 or stream["last_text"] == transcription:
+            if (len(transcription) >= 25 and should_asr) or stream["last_text"] == transcription:
                 stream["audio_buffer"] = None
                 stream["text_buffer"].append("<p style='font-size:xxx-large;'>"+transcription+"</p>")
                 try:
